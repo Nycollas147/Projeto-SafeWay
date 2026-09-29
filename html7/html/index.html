@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚌 SafeWay - Linha 122</title>
+
+  <!-- CSS do Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com">
+
+  <style>
+    :root {
+      --green: #087f23;
+      --green2: #0aaa32;
+      --blue: #1769ff;
+      --bg: #f3f6f4;
+      --card: #fff;
+      --text: #202124;
+      --border: #dfe6e1;
+      --shadow: 0 8px 25px rgba(0,0,0,.10);
+    }
+
+    body.dark {
+      --bg: #101412;
+      --card: #19201c;
+      --text: #f4f7f5;
+      --border: #303a34;
+      --shadow: 0 8px 25px rgba(0,0,0,.4);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--text); transition: 0.25s; }
+
+    header {
+      background: linear-gradient(135deg, var(--green), var(--green2));
+      color: #fff;
+      padding: 20px 15px;
+    }
+
+    .header-container {
+      max-width: 1100px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo h1 { margin: 0; font-size: 24px; }
+    .logo small { opacity: .85; }
+
+    .actions button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 0;
+      cursor: pointer;
+      color: white;
+      background: rgba(255,255,255,.2);
+      font-size: 16px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+
+    .map-box {
+      background: var(--card);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    #map { height: 500px; width: 100%; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-container">
+    <div class="logo">
+      <h1>🚌 SafeWay</h1>
+      <small>Linha 122 - Itinerário Completo</small>
+    </div>
+    <div class="actions">
+      <button onclick="alternarTema()">🌙</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="map-box">
+    <div id="map"></div>
+  </div>
+</div>
+
+<!-- JavaScript do Leaflet -->
+<script src="https://unpkg.com"></script>
+
+<script>
+  // Inicializa o mapa centralizado no trajeto geral entre Barueri e Osasco
+  const map = L.map("map").setView([-23.528, -46.795], 13);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap"
+  }).addTo(map);
+
+  /* COORDENADAS FIXAS DAS RUAS (Lat, Lon) */
+  const pontosItinerario = [
+    { lat: -23.5042, lon: -46.8201, rua: "Rua Dom Feliciano", cidade: "Barueri" },
+    { lat: -23.5050, lon: -46.8180, rua: "Rua Abelardo Luz", cidade: "Barueri" },
+    { lat: -23.5057, lon: -46.8142, rua: "Rua Nova Aurora", cidade: "Barueri" },
+    { lat: -23.5071, lon: -46.8125, rua: "Rua Antônio Ferreira Lima", cidade: "Barueri" },
+    { lat: -23.5098, lon: -46.8090, rua: "Avenida Diretriz", cidade: "Barueri" },
+    { lat: -23.5135, lon: -46.8032, rua: "Avenida Diretriz", cidade: "Osasco" },
+    { lat: -23.5144, lon: -46.8015, rua: "Rua Antônio Benedito Ferreira", cidade: "Osasco" },
+    { lat: -23.5152, lon: -46.7995, rua: "Rua Doutor Rodolfo dos Santos Ferreira", cidade: "Osasco" },
+    { lat: -23.5160, lon: -46.7980, rua: "Rua Reinaldo Ceschini", cidade: "Osasco" },
+    { lat: -23.5158, lon: -46.7950, rua: "Rua Piedade", cidade: "Osasco" },
+    { lat: -23.5165, lon: -46.7932, rua: "Rua Piacatu", cidade: "Osasco" },
+    { lat: -23.5173, lon: -46.7910, rua: "Rua Palestina", cidade: "Osasco" },
+    { lat: -23.5181, lon: -46.7895, rua: "Rua Pacaembu", cidade: "Osasco" },
+    { lat: -23.5190, lon: -46.7872, rua: "Rua Paranapanema", cidade: "Osasco" },
+    { lat: -23.5222, lon: -46.7845, rua: "Avenida Eurico da Cruz", cidade: "Osasco" },
+    { lat: -23.5245, lon: -46.7830, rua: "Rua Professora Adelaide Escobar Bueno", cidade: "Osasco" },
+    { lat: -23.5262, lon: -46.7815, rua: "Rua Pascoal Ranieri Mazzilli", cidade: "Osasco" },
+    { lat: -23.5280, lon: -46.7802, rua: "Rua Virginia Pereira", cidade: "Osasco" },
+    { lat: -23.5298, lon: -46.7810, rua: "Avenida Eduardo Carlos Pereira", cidade: "Osasco" },
+    { lat: -23.5322, lon: -46.7825, rua: "Rua Alexandre Gusmão", cidade: "Osasco" },
+    { lat: -23.5350, lon: -46.7850, rua: "Avenida Professor Lourenço Filho", cidade: "Osasco" },
+    { lat: -23.5365, lon: -46.7832, rua: "Rua Eurípedes de Paula", cidade: "Osasco" },
+    { lat: -23.5358, lon: -46.7780, rua: "Avenida Getúlio Vargas", cidade: "Osasco" },
+    { lat: -23.5305, lon: -46.7735, rua: "Avenida das Nações Unidas", cidade: "Osasco" },
+    { lat: -23.5288, lon: -46.7695, rua: "Avenida Fuad Auada", cidade: "Osasco" },
+    { lat: -23.5312, lon: -46.7672, rua: "Avenida Maria Campos", cidade: "Osasco" },
+    { lat: -23.5330, lon: -46.7660, rua: "Avenida Doutor Jaime Regalo Pereira", cidade: "Osasco" },
+    { lat: -23.5345, lon: -46.7678, rua: "Rua Dona Primitiva Vianco", cidade: "Osasco" },
+    { lat: -23.5362, lon: -46.7692, rua: "Rua da Estação", cidade: "Osasco" },
+    { lat: -23.5378, lon: -46.7710, rua: "Avenida João Batista", cidade: "Osasco" },
+    { lat: -23.5392, lon: -46.7735, rua: "Avenida Marechal Rondon", cidade: "Osasco" },
+    { lat: -23.5410, lon: -46.7715, rua: "Rua Antônio Agú", cidade: "Osasco" },
+    { lat: -23.5428, lon: -46.7662, rua: "Avenida dos Autonomistas", cidade: "Osasco" },
+    { lat: -23.5452, lon: -46.7645, rua: "Praça Manoel Coutinho", cidade: "Osasco" },
+    { lat: -23.5468, lon: -46.7620, rua: "Praça Rotary", cidade: "Osasco" },
+    { lat: -23.5480, lon: -46.7592, rua: "Praça Província de Torino", cidade: "Osasco" }
+  ];
+
+  /* GERA OS PONTOS NO MAPA */
+  pontosItinerario.forEach(ponto => {
+    L.circleMarker([ponto.lat, ponto.lon], {
+      radius: 6,
+      color: "#fff",
+      weight: 1.5,
+      fillColor: ponto.cidade === "Barueri" ? "#d71920" : "#1769ff",
+      fillOpacity: 1
+    })
+    .addTo(map)
+    .bindPopup(`<b>${ponto.rua}</b><br>${ponto.cidade} - SP`); // <-- Corrigido o uso de crases para interpolação
+  });
+
+  /* FUNÇÃO MODO ESCURO */
+  function alternarTema() {
+    document.body.classList.toggle("dark");
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#087f23">
+
+<title>🚌 SafeWay</title>
+
+<link rel="stylesheet"
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+:root{
+  --green:#087f23;
+  --green2:#0aaa32;
+  --blue:#1769ff;
+  --bg:#f3f6f4;
+  --card:#fff;
+  --text:#202124;
+  --muted:#68736d;
+  --border:#dfe6e1;
+  --danger:#d71920;
+  --shadow:0 8px 25px rgba(0,0,0,.10);
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  transition:.25s;
+}
+
+body.dark{
+  --bg:#101412;
+  --card:#19201c;
+  --text:#f4f7f5;
+  --muted:#aeb8b2;
+  --border:#303a34;
+  --shadow:0 8px 25px rgba(0,0,0,.4);
+}
+
+body.colorblind{
+  --green:#0072B2;
+  --green2:#009E73;
+  --blue:#D55E00;
+  --danger:#CC79A7;
+}
+
+button,input,textarea{font:inherit}
+
+button{
+  cursor:pointer;
+  border:0;
+}
+
+header{
+  background:linear-gradient(135deg,var(--green),var(--green2));
+  color:#fff;
+  padding:22px 18px 35px;
+}
+
+.header{
+  width:min(1100px,100%);
+  margin:auto;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.logo-icon{font-size:38px}
+
+.logo h1{
+  margin:0;
+  font-size:29px;
+}
+
+.logo small{opacity:.85}
+
+.actions{
+  display:flex;
+  gap:7px;
+}
+
+.actions button{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  color:white;
+  background:rgba(255,255,255,.15);
+  font-size:19px;
+}
+
+.subtitle{
+  margin:20px 0 0;
+  opacity:.92;
+}
+
+.search{
+  width:min(1000px,calc(100% - 24px));
+  margin:-25px auto 18px;
+  position:relative;
+  z-index:5;
+}
+
+.search-box{
+  display:flex;
+  gap:8px;
+  background:var(--card);
+  padding:9px;
+  border-radius:16px;
+  box-shadow:var(--shadow);
+}
+
+.search-box input{
+  flex:1;
+  min-width:0;
+  padding:12px;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:var(--text);
+}
+
+.primary{
+  background:var(--green);
+  color:white;
+  padding:12px 17px;
+  border-radius:10px;
+  font-weight:bold;
+}
+
+.container{
+  width:min(1100px,calc(100% - 24px));
+  margin:auto;
+}
+
+.tools{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:20px;
+}
+
+.tool{
+  background:var(--card);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:15px;
+  text-align:left;
+}
+
+.tool strong{
+  display:block;
+  margin-bottom:5px;
+}
+
+.tool small{color:var(--muted)}
+
+.title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:20px 0 12px;
+}
+
+.title h2{
+  margin:0;
+  font-size:20px;
+}
+
+.title span{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.lines{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+}
+
+.line{
+  background:var(--card);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:14px;
+  text-align:left;
+  transition:.2s;
+}
+
+.line:hover{
+  transform:translateY(-3px);
+  box-shadow:var(--shadow);
+}
+
+.number{
+  display:inline-flex;
+  background:var(--blue);
+  color:#fff;
+  border-radius:9px;
+  padding:7px 12px;
+  font-size:18px;
+  font-weight:bold;
+}
+
+.line h3{
+  margin:11px 0 5px;
+  font-size:14px;
+}
+
+.line small{color:var(--muted)}
+
+.map-box{
+  position:relative;
+  background:var(--card);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+
+#map{
+  height:530px;
+  width:100%;
+}
+
+.map-badge{
+  position:absolute;
+  z-index:500;
+  top:12px;
+  left:12px;
+  background:rgba(255,255,255,.95);
+  color:#222;
+  padding:9px 12px;
+  border-radius:10px;
+  font-size:13px;
+  box-shadow:0 3px 10px rgba(0,0,0,.15);
+}
+
+.dark .map-badge{
+  background:#19201c;
+  color:#fff;
+}
+
+.result{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:18px;
+  margin:18px 0;
+  box-shadow:0 2px 10px rgba(0,0,0,.05);
+}
+
+.result-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.result-head h2{margin:0}
+
+.status{
+  margin-left:auto;
+  background:#e8f5e9;
+  color:var(--green);
+  padding:7px 10px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.dark .status{
+  background:#17351e;
+}
+
+.info{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin-top:15px;
+}
+
+.info-card{
+  background:rgba(128,128,128,.07);
+  padding:13px;
+  border-radius:11px;
+}
+
+.info-card strong{display:block;margin-bottom:5px}
+.info-card small{color:var(--muted)}
+
+.route-status{
+  margin-top:13px;
+  padding:12px;
+  border-radius:10px;
+  background:#eef5ff;
+  color:#1550a5;
+  font-size:13px;
+}
+
+.dark .route-status{
+  background:#182b43;
+  color:#a9caff;
+}
+
+.end-trip{
+  width:100%;
+  margin-top:16px;
+  padding:14px;
+  border-radius:10px;
+  background:#ffc107;
+  color:#222;
+  font-weight:bold;
+}
+
+.clear{
+  width:100%;
+  margin-top:10px;
+  padding:12px;
+  border-radius:10px;
+  background:#e7ece9;
+  color:#222;
+  font-weight:bold;
+}
+
+.dark .clear{
+  background:#303934;
+  color:#fff;
+}
+
+.modal-bg{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:5000;
+  background:rgba(0,0,0,.6);
+  align-items:center;
+  justify-content:center;
+  padding:15px;
+}
+
+.modal{
+  width:min(460px,100%);
+  max-height:90vh;
+  overflow:auto;
+  background:var(--card);
+  color:var(--text);
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.modal-head h3{margin:0}
+
+.close{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:#eee;
+  color:#222;
+}
+
+.modal input,
+.modal textarea{
+  width:100%;
+  padding:12px;
+  margin:7px 0;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.modal textarea{
+  min-height:110px;
+  resize:vertical;
+}
+
+.modal .primary{
+  width:100%;
+  margin-top:7px;
+}
+
+.stars{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin:15px 0 5px;
+}
+
+.star{
+  background:none;
+  font-size:34px;
+  color:#bbb;
+}
+
+.star.active{color:#ffc107}
+
+.rating{
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  margin-bottom:10px;
+}
+
+.feedback{
+  background:rgba(128,128,128,.08);
+  padding:12px;
+  border-radius:10px;
+  margin:8px 0;
+}
+
+.feedback strong{display:block}
+.feedback-stars{color:#ffc107;margin:4px 0}
+.feedback small{color:var(--muted)}
+
+.delete{
+  margin-top:8px;
+  padding:7px 10px;
+  background:var(--danger);
+  color:white;
+  border-radius:7px;
+}
+
+.pix{text-align:center}
+
+.pix img{
+  display:block;
+  width:190px;
+  height:190px;
+  object-fit:contain;
+  margin:15px auto;
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+
+.pix-code{
+  text-align:center;
+  font-size:11px;
+}
+
+.pix-button{
+  width:100%;
+  padding:12px;
+  border-radius:9px;
+  background:#32bcad;
+  color:#fff;
+  font-weight:bold;
+}
+
+.admin-section{
+  margin-top:15px;
+}
+
+#toast{
+  position:fixed;
+  z-index:10000;
+  bottom:20px;
+  left:50%;
+  transform:translate(-50%,80px);
+  opacity:0;
+  background:#202124;
+  color:#fff;
+  padding:12px 18px;
+  border-radius:30px;
+  transition:.3s;
+  pointer-events:none;
+}
+
+#toast.show{
+  transform:translate(-50%,0);
+  opacity:1;
+}
+
+footer{
+  text-align:center;
+  color:var(--muted);
+  padding:25px;
+  font-size:12px;
+}
+
+@media(max-width:800px){
+  .lines{grid-template-columns:repeat(2,1fr)}
+  #map{height:470px}
+}
+
+@media(max-width:600px){
+  .tools{grid-template-columns:1fr}
+  .info{grid-template-columns:1fr}
+  .lines{grid-template-columns:repeat(2,1fr)}
+  #map{height:430px}
+}
+
+@media(max-width:400px){
+  .lines{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header">
+
+    <div class="topbar">
+
+      <div class="logo">
+        <div class="logo-icon">🚌</div>
+        <div>
+          <h1>SafeWay</h1>
+          <small>Transporte inteligente</small>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button onclick="alternarTema()" id="themeButton">🌙</button>
+        <button onclick="alternarDaltonico()" id="colorButton">👓</button>
+        <button onclick="abrirDoacao()">💚</button>
+      </div>
+
+    </div>
+
+    <p class="subtitle">
+      Acompanhe seu ônibus, veja a rota e finalize sua viagem com segurança.
+    </p>
+
+  </div>
+</header>
+
+<div class="search">
+  <div class="search-box">
+    <input
+      id="linha"
+      inputmode="numeric"
+      placeholder="Digite o número da linha..."
+    >
+    <button class="primary" onclick="buscarLinha()">
+      🔎 Buscar
+    </button>
+  </div>
+</div>
+
+<main class="container">
+
+  <div class="tools">
+
+    <button class="tool" onclick="minhaLocalizacao()">
+      📍
+      <strong>Minha localização</strong>
+      <small>Mostrar onde você está</small>
+    </button>
+
+    <button class="tool" onclick="limparMapa()">
+      🧹
+      <strong>Limpar</strong>
+      <small>Remover rota e ônibus</small>
+    </button>
+
+    <button class="tool" onclick="abrirAdmin()">
+      🔐
+      <strong>Administrador</strong>
+      <small>Gerenciar avaliações</small>
+    </button>
+
+  </div>
+
+  <div class="title">
+    <h2>🚌 Linhas</h2>
+    <span>Escolha uma linha</span>
+  </div>
+
+  <div class="lines" id="listaLinhas"></div>
+
+  <div class="title">
+    <h2>🗺️ Mapa</h2>
+    <span id="mapInfo">Selecione uma linha</span>
+  </div>
+
+  <div class="map-box">
+
+    <div class="map-badge" id="mapBadge">
+      🟢 Sistema online
+    </div>
+
+    <div id="map"></div>
+
+  </div>
+
+  <section class="result" id="resultado">
+
+    <div class="result-head">
+      <h2>🚌 SafeWay</h2>
+      <span class="status">● Online</span>
+    </div>
+
+    <p>
+      Selecione uma linha para acompanhar o ônibus.
+    </p>
+
+  </section>
+
+</main>
+
+<!-- FEEDBACK -->
+
+<div class="modal-bg" id="feedbackModal"
+     onclick="fecharFora(event)">
+
+  <div class="modal" onclick="event.stopPropagation()">
+
+    <div class="modal-head">
+      <h3>⭐ Avaliar viagem</h3>
+      <button class="close" onclick="fecharModais()">✕</button>
+    </div>
+
+    <p id="feedbackInfo">
+      Avalie sua viagem.
+    </p>
+
+    <div class="stars">
+
+      <button class="star" onclick="estrela(1)">★</button>
+      <button class="star" onclick="estrela(2)">★</button>
+      <button class="star" onclick="estrela(3)">★</button>
+      <button class="star" onclick="estrela(4)">★</button>
+      <button class="star" onclick="estrela(5)">★</button>
+
+    </div>
+
+    <div class="rating" id="rating">
+      Escolha uma nota
+    </div>
+
+    <input id="nomeFeedback"
+           placeholder="Seu nome"
+           maxlength="80">
+
+    <textarea id="textoFeedback"
+              placeholder="Conte como foi sua viagem..."
+              maxlength="1000"></textarea>
+
+    <button class="primary" onclick="enviarFeedback()">
+      📤 Enviar avaliação
+    </button>
+
+    <hr>
+
+    <h4>🔎 Consultar meus feedbacks</h4>
+
+    <input id="nomeConsulta"
+           placeholder="Digite seu nome">
+
+    <button class="primary"
+            onclick="consultarFeedbacks()">
+      👤 Consultar
+    </button>
+
+    <div id="meusFeedbacks"></div>
+
+  </div>
+</div>
+
+<!-- ADMIN -->
+
+<div class="modal-bg" id="adminModal"
+     onclick="fecharFora(event)">
+
+  <div class="modal" onclick="event.stopPropagation()">
+
+    <div class="modal-head">
+      <h3>🔐 Administrador</h3>
+      <button class="close" onclick="fecharModais()">✕</button>
+    </div>
+
+    <input id="senhaAdmin"
+           type="password"
+           placeholder="Senha do administrador">
+
+    <button class="primary" onclick="loginAdmin()">
+      🔑 Entrar
+    </button>
+
+    <div id="painelAdmin" class="admin-section"></div>
+
+  </div>
+</div>
+
+<!-- APOIAR -->
+
+<div class="modal-bg" id="pixModal"
+     onclick="fecharFora(event)">
+
+  <div class="modal pix" onclick="event.stopPropagation()">
+
+    <div class="modal-head">
+      <h3>💚 Apoiar SafeWay</h3>
+      <button class="close" onclick="fecharModais()">✕</button>
+    </div>
+
+    <p>
+      Ajude a manter o SafeWay funcionando
+      e recebendo novas melhorias. 🚌💚
+    </p>
+
+    <img
+      src="qr-code-pix.png"
+      alt="QR Code Pix"
+      onerror="this.style.display='none'"
+    >
+
+    <input
+      class="pix-code"
+      id="pixCode"
+      readonly
+      value="SUA_CHAVE_PIX_OU_CODIGO_COPIA_E_COLA"
+    >
+
+    <button class="pix-button" onclick="copiarPix()">
+      📋 Copiar Pix
+    </button>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<footer>
+  🚌 <b>SafeWay</b><br>
+  Transporte inteligente, simples e acessível.<br><br>
+  © 2026 SafeWay
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+/* ==============================
+   CONFIGURAÇÃO
+============================== */
+
+const CONFIG = {
+  senhaAdmin: "122admin",
+  storage: "safeway_feedbacks",
+  tema: "safeway_tema",
+  daltonico: "safeway_daltonico"
+};
+
+
+/* ==============================
+   LINHAS
+============================== */
+
+const linhas = {
+
+  "122":{
+    nome:"Barueri (Petrobras) / Osasco (Vila Yara)",
+    cor:"#1769ff",
+
+    terminais:[
+      {
+        nome:"Terminal / Rua Dom Feliciano - Barueri",
+        lat:-23.50294,
+        lng:-46.81775
+      },
+      {
+        nome:"Terminal Urbano Amador Aguiar - Vila Yara",
+        lat:-23.54630,
+        lng:-46.77310
+      }
+    ],
+
+    pontos:[
+      [-23.50294,-46.81775],
+      [-23.50420,-46.81700],
+      [-23.50560,-46.81550],
+      [-23.50750,-46.81310],
+      [-23.50900,-46.81120],
+      [-23.51200,-46.81020],
+      [-23.51600,-46.80930],
+      [-23.52000,-46.81130],
+      [-23.52400,-46.81100],
+      [-23.52800,-46.80550],
+      [-23.53020,-46.79300],
+      [-23.53100,-46.78700],
+      [-23.53280,-46.77900],
+      [-23.53800,-46.77350],
+      [-23.54630,-46.77310]
+    ]
+  },
+
+  "020":{
+    nome:"Helena Maria / Vila Yara",
+    cor:"#ff6600",
+
+    terminais:[
+      {
+        nome:"Terminal Vila Yara",
+        lat:-23.5450,
+        lng:-46.7730
+      },
+      {
+        nome:"Terminal Helena Maria",
+        lat:-23.5700,
+        lng:-46.7500
+      }
+    ],
+
+    pontos:[
+      [-23.5450,-46.7730],
+      [-23.5380,-46.7740],
+      [-23.5320,-46.7750],
+      [-23.5260,-46.7720],
+      [-23.5200,-46.7680],
+      [-23.5350,-46.7600],
+      [-23.5480,-46.7550],
+      [-23.5600,-46.7520],
+      [-23.5700,-46.7500]
+    ]
+  },
+
+  "022":{
+    nome:"Alphaville / Osasco Centro",
+    cor:"#8b00ff",
+
+    terminais:[
+      {
+        nome:"Terminal Alphaville",
+        lat:-23.5000,
+        lng:-46.8480
+      },
+      {
+        nome:"Terminal Osasco Centro",
+        lat:-23.5290,
+        lng:-46.7735
+      }
+    ],
+
+    pontos:[
+      [-23.5000,-46.8480],
+      [-23.5050,-46.8400],
+      [-23.5100,-46.8300],
+      [-23.5150,-46.8200],
+      [-23.5200,-46.8050],
+      [-23.5250,-46.7900],
+      [-23.5290,-46.7735]
+    ]
+  },
+
+  "024":{
+    nome:"Barueri Jardim Silveira / Vila Yara",
+    cor:"#e60012",
+
+    terminais:[
+      {
+        nome:"Estação Jardim Silveira",
+        lat:-23.5125,
+        lng:-46.8710
+      },
+      {
+        nome:"Terminal Vila Yara",
+        lat:-23.5463,
+        lng:-46.7731
+      }
+    ],
+
+    pontos:[
+      [-23.5125,-46.8710],
+      [-23.5100,-46.8550],
+      [-23.5080,-46.8350],
+      [-23.5120,-46.8150],
+      [-23.5220,-46.8000],
+      [-23.5350,-46.7850],
+      [-23.5463,-46.7731]
+    ]
+  },
+
+  "036":{
+    nome:"Osasco Jardim Veloso / São Paulo Pirituba",
+    cor:"#00a86b",
+
+    terminais:[
+      {
+        nome:"Jardim Veloso",
+        lat:-23.5550,
+        lng:-46.8120
+      },
+      {
+        nome:"Terminal Pirituba",
+        lat:-23.5045,
+        lng:-46.7085
+      }
+    ],
+
+    pontos:[
+      [-23.5550,-46.8120],
+      [-23.5450,-46.8050],
+      [-23.5350,-46.7900],
+      [-23.5250,-46.7700],
+      [-23.5150,-46.7500],
+      [-23.5100,-46.7300],
+      [-23.5045,-46.7085]
+    ]
+  }
+};
+
+
+/* ==============================
+   MAPA
+============================== */
+
+const mapa = L.map("map")
+.setView([-23.520,-46.820],12);
+
+L.tileLayer(
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {
+    maxZoom:19,
+    attribution:"© OpenStreetMap contributors"
+  }
+).addTo(mapa);
+
+
+let camadas=[];
+let marcadorOnibus=null;
+let animacao=null;
+let rotaAtual=null;
+let linhaAtual=null;
+
+
+/* ==============================
+   ÍCONE ÔNIBUS
+============================== */
+
+const iconeOnibus=L.divIcon({
+
+  className:"bus-icon",
+
+  html:`
+    <div style="
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      background:#fff;
+      border:3px solid #1769ff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:27px;
+      box-shadow:0 3px 10px rgba(0,0,0,.35);
+    ">🚌</div>
+  `,
+
+  iconSize:[42,42],
+  iconAnchor:[21,21]
+});
+
+
+/* ==============================
+   UTILIDADES
+============================== */
+
+function toast(text){
+
+  const t=document.getElementById("toast");
+
+  t.textContent=text;
+  t.classList.add("show");
+
+  clearTimeout(toast.timer);
+
+  toast.timer=setTimeout(()=>{
+    t.classList.remove("show");
+  },2800);
+}
+
+
+function escapar(texto){
+
+  const div=document.createElement("div");
+
+  div.textContent=String(texto);
+
+  return div.innerHTML;
+}
+
+
+/* ==============================
+   CARDS
+============================== */
+
+function criarCards(){
+
+  const container=document.getElementById("listaLinhas");
+
+  Object.entries(linhas).forEach(([numero,linha])=>{
+
+    const card=document.createElement("button");
+
+    card.className="line";
+
+    card.onclick=()=>buscarLinha(numero);
+
+    card.innerHTML=`
+      <span
+        class="number"
+        style="background:${linha.cor}"
+      >
+        ${numero}
+      </span>
+
+      <h3>${escapar(linha.nome)}</h3>
+
+      <small>
+        🚌 Acompanhar ônibus
+      </small>
+    `;
+
+    container.appendChild(card);
+
+  });
+}
+
+
+/* ==============================
+   LIMPAR
+============================== */
+
+function limparMapa(){
+
+  if(animacao){
+    cancelAnimationFrame(animacao);
+    animacao=null;
+  }
+
+  camadas.forEach(c=>{
+    if(mapa.hasLayer(c)){
+      mapa.removeLayer(c);
+    }
+  });
+
+  camadas=[];
+
+  if(marcadorOnibus){
+    mapa.removeLayer(marcadorOnibus);
+    marcadorOnibus=null;
+  }
+
+  rotaAtual=null;
+  linhaAtual=null;
+
+  document.getElementById("mapInfo")
+    .textContent="Selecione uma linha";
+
+  document.getElementById("mapBadge")
+    .textContent="🟢 Sistema online";
+
+  document.getElementById("resultado").innerHTML=`
+    <div class="result-head">
+      <h2>🚌 SafeWay</h2>
+      <span class="status">● Online</span>
+    </div>
+    <p>Mapa limpo. Selecione uma linha para começar.</p>
+  `;
+
+  toast("🧹 Mapa limpo.");
+
+}
+
+
+/* ==============================
+   BUSCAR LINHA
+============================== */
+
+async function buscarLinha(numeroManual){
+
+  const numero=numeroManual ||
+    document.getElementById("linha")
+    .value.trim().replace(/\D/g,"");
+
+  if(!numero){
+    toast("Digite o número da linha.");
+    return;
+  }
+
+  const linha=linhas[numero];
+
+  if(!linha){
+    toast("❌ Linha não cadastrada.");
+    return;
+  }
+
+  document.getElementById("linha").value=numero;
+
+  limparMapa();
+
+  linhaAtual=numero;
+
+  /* TERMINAIS */
+
+  linha.terminais.forEach(terminal=>{
+
+    const marker=L.marker([
+      terminal.lat,
+      terminal.lng
+    ])
+    .addTo(mapa)
+    .bindPopup(`
+      <b>🚏 Terminal</b><br><br>
+      ${escapar(terminal.nome)}
+    `);
+
+    camadas.push(marker);
+
+  });
+
+
+  /* ROTA APROXIMADA VISÍVEL */
+
+  const base=L.polyline(
+    linha.pontos,
+    {
+      color:linha.cor,
+      weight:5,
+      opacity:.35,
+      dashArray:"8,8"
+    }
+  ).addTo(mapa);
+
+  camadas.push(base);
+
+  mapa.fitBounds(
+    base.getBounds(),
+    {padding:[30,30]}
+  );
+
+
+  document.getElementById("mapInfo")
+    .textContent=`Linha ${numero}`;
+
+  document.getElementById("mapBadge")
+    .textContent=`🚌 Linha ${numero}`;
+
+
+  document.getElementById("resultado").innerHTML=`
+
+    <div class="result-head">
+
+      <h2>🚌 Linha ${numero}</h2>
+
+      <span class="status">
+        🟢 Ônibus em movimento
+      </span>
+
+    </div>
+
+    <p>
+      ${escapar(linha.nome)}
+    </p>
+
+    <div class="info">
+
+      <div class="info-card">
+        <strong>🚏 Saída</strong>
+        <small>
+          ${escapar(linha.terminais[0].nome)}
+        </small>
+      </div>
+
+      <div class="info-card">
+        <strong>🏁 Chegada</strong>
+        <small>
+          ${escapar(linha.terminais[1].nome)}
+        </small>
+      </div>
+
+    </div>
+
+    <div class="route-status" id="routeStatus">
+      ⏳ Calculando a rota correta pelas ruas...
+    </div>
+
+    <button class="end-trip"
+            onclick="finalizarViagem()">
+      🏁 Finalizar viagem e avaliar
+    </button>
+
+    <button class="clear"
+            onclick="limparMapa()">
+      🧹 Limpar mapa
+    </button>
+
+  `;
+
+
+  /* ROTA REAL */
+
+  try{
+
+    // 1. Cria o texto com os pontos
+async function buscarLinha(numeroManual) {
+    // Código anterior (onde você obtém o objeto da linha 122)...
+
+    try {
+        // 1. Mapeia e junta as coordenadas de forma limpa: "lon,lat;lon,lat"
+        const coordenadas = linha.pontos
+            .map(p => p[1] + "," + p[0]) // Garante que a ordem seja Longitude,Latitude exigida pela API
+            .join(";");
+
+        // 2. Monta a URL concatenando de forma direta e sem duplicações
+        const url = "https://project-osrm.org" + coordenadas + "?overview=full&geometries=geojson";
+
+        // 3. Executa a requisição HTTP
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error("Erro na resposta do servidor da rota.");
+        }
+
+        const data = await response.json();
+
+        if (data.code !== "Ok" || !data.routes || data.routes.length === 0) {
+            throw new Error("Nenhuma rota válida foi retornada.");
+        }
+
+        // 4. Extrai a geometria correta da rota recebida
+        const ruas = data.routes[0];
+        const camadaGeometria = ruas.geometry; // Contém os novos pontos conectados pelas ruas reais
+        
+        // Código para plotar no Leaflet (ex: L.geoJSON(camadaGeometria).addTo(mapa);)
+
+    } catch (error) {
+        console.error("Falha ao estruturar rota 122:", error);
+    }
+}
+
+
+    const ruas=data.routes[0]
+      .geometry
+      .coordinates
+      .map(p=>[p[1],p[0]]);
+
+
+    if(base && mapa.hasLayer(base)){
+      mapa.removeLayer(base);
+
+      camadas=camadas.filter(c=>c!==base);
+    }
+
+
+    rotaAtual=L.polyline(
+      ruas,
+      {
+        color:linha.cor,
+        weight:7,
+        opacity:.95,
+        lineCap:"round",
+        lineJoin:"round"
+      }
+    ).addTo(mapa);
+
+    camadas.push(rotaAtual);
+
+    mapa.fitBounds(
+      rotaAtual.getBounds(),
+      {padding:[30,30]}
+    );
+
+
+    const status=document.getElementById("routeStatus");
+
+    if(status){
+      status.innerHTML=
+        "✅ Rota pelas ruas carregada. O ônibus seguirá esta rota.";
+    }
+
+
+    /* ÔNIBUS SEGUE A ROTA REAL */
+
+    animarOnibus(ruas,numero,linha);
+
+  }
+  catch{
+
+    const status=document.getElementById("routeStatus");
+
+    if(status){
+      status.innerHTML=
+        "⚠️ Não foi possível carregar a rota pelas ruas. Mostrando trajeto aproximado.";
+    }
+
+    animarOnibus(linha.pontos,numero,linha);
+
+  }
+
+}
+
+
+/* ==============================
+   ÔNIBUS ANDANDO
+============================== */
+
+function animarOnibus(pontos,numero,linha){
+
+  if(animacao){
+    cancelAnimationFrame(animacao);
+  }
+
+  if(marcadorOnibus){
+    mapa.removeLayer(marcadorOnibus);
+  }
+
+
+  marcadorOnibus=L.marker(
+    pontos[0],
+    {
+      icon:iconeOnibus,
+      zIndexOffset:2000
+    }
+  )
+  .addTo(mapa)
+  .bindPopup(`
+    <b>🚌 Linha ${numero}</b><br>
+    ${escapar(linha.nome)}
+    <br><br>
+    🟢 Ônibus em movimento
+  `);
+
+
+  let segmento=0;
+  let progresso=0;
+
+
+  function mover(){
+
+    if(!pontos.length){
+      return;
+    }
+
+    const inicio=pontos[segmento];
+
+    const fim=
+      pontos[(segmento+1)%pontos.length];
+
+
+    progresso+=0.0018;
+
+
+    if(progresso>=1){
+
+      progresso=0;
+
+      segmento++;
+
+      if(segmento>=pontos.length-1){
+        segmento=0;
+      }
+
+    }
+
+
+    const lat=
+      inicio[0]+
+      (fim[0]-inicio[0])*progresso;
+
+    const lng=
+      inicio[1]+
+      (fim[1]-inicio[1])*progresso;
+
+
+    marcadorOnibus.setLatLng([lat,lng]);
+
+
+    animacao=
+      requestAnimationFrame(mover);
+
+  }
+
+  mover();
+}
+
+
+/* ==============================
+   LOCALIZAÇÃO
+============================== */
+
+function minhaLocalizacao(){
+
+  if(!navigator.geolocation){
+    toast("Seu navegador não suporta localização.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+
+    position=>{
+
+      const local=[
+        position.coords.latitude,
+        position.coords.longitude
+      ];
+
+      const marker=L.marker(local)
+        .addTo(mapa)
+        .bindPopup("<b>📍 Você está aqui</b>")
+        .openPopup();
+
+      const circle=L.circle(
+        local,
+        {
+          radius:position.coords.accuracy,
+          color:"#1769ff",
+          fillColor:"#1769ff",
+          fillOpacity:.12
+        }
+      ).addTo(mapa);
+
+      camadas.push(marker,circle);
+
+      mapa.setView(local,16);
+
+      toast("📍 Localização encontrada.");
+
+    },
+
+    ()=>{
+      toast("❌ Não foi possível obter sua localização.");
+    },
+
+    {
+      enableHighAccuracy:true,
+      timeout:15000,
+      maximumAge:5000
+    }
+
+  );
+}
+
+
+/* ==============================
+   FINALIZAR VIAGEM
+============================== */
+
+function finalizarViagem(){
+
+  if(!linhaAtual){
+    toast("Nenhuma viagem ativa.");
+    return;
+  }
+
+  abrirFeedback();
+
+  document.getElementById("feedbackInfo")
+    .textContent=
+      `🏁 Viagem da linha ${linhaAtual} finalizada. Avalie sua experiência.`;
+
+}
+
+
+/* ==============================
+   MODAIS
+============================== */
+
+function fecharModais(){
+
+  document.querySelectorAll(".modal-bg")
+    .forEach(m=>m.style.display="none");
+
+}
+
+function fecharFora(event){
+
+  if(event.target===event.currentTarget){
+    fecharModais();
+  }
+
+}
+
+function abrirFeedback(){
+
+  fecharModais();
+
+  document.getElementById("feedbackModal")
+    .style.display="flex";
+
+}
+
+function abrirAdmin(){
+
+  fecharModais();
+
+  document.getElementById("adminModal")
+    .style.display="flex";
+
+}
+
+function abrirDoacao(){
+
+  fecharModais();
+
+  document.getElementById("pixModal")
+    .style.display="flex";
+
+}
+
+
+/* ==============================
+   ESTRELAS
+============================== */
+
+let notaSelecionada=0;
+
+function estrela(nota){
+
+  notaSelecionada=nota;
+
+  document.querySelectorAll(".star")
+    .forEach((s,i)=>{
+      s.classList.toggle(
+        "active",
+        i<nota
+      );
+    });
+
+  const textos=[
+    "",
+    "Muito ruim",
+    "Ruim",
+    "Regular",
+    "Muito bom",
+    "Excelente!"
+  ];
+
+  document.getElementById("rating")
+    .textContent=textos[nota];
+
+}
+
+
+/* ==============================
+   FEEDBACK
+============================== */
+
+function obterFeedbacks(){
+
+  try{
+    return JSON.parse(
+      localStorage.getItem(CONFIG.storage)
+    ) || [];
+  }
+  catch{
+    return [];
+  }
+
+}
+
+function salvarFeedbacks(lista){
+
+  localStorage.setItem(
+    CONFIG.storage,
+    JSON.stringify(lista)
+  );
+
+}
+
+
+function enviarFeedback(){
+
+  const nome=document
+    .getElementById("nomeFeedback")
+    .value.trim();
+
+  const mensagem=document
+    .getElementById("textoFeedback")
+    .value.trim();
+
+
+  if(!notaSelecionada){
+    toast("⭐ Escolha uma nota.");
+    return;
+  }
+
+  if(!nome){
+    toast("Digite seu nome.");
+    return;
+  }
+
+  if(mensagem.length<5){
+    toast("Escreva um pouco mais.");
+    return;
+  }
+
+
+  const lista=obterFeedbacks();
+
+  lista.push({
+
+    id:Date.now(),
+
+    nome,
+
+    mensagem,
+
+    nota:notaSelecionada,
+
+    linha:linhaAtual || "",
+
+    data:new Date().toLocaleString("pt-BR")
+
+  });
+
+
+  salvarFeedbacks(lista);
+
+  document.getElementById("textoFeedback")
+    .value="";
+
+  document.getElementById("nomeConsulta")
+    .value=nome;
+
+  toast("✅ Avaliação enviada!");
+
+  consultarFeedbacks();
+
+}
+
+
+/* ==============================
+   CONSULTAR
+============================== */
+
+function consultarFeedbacks(){
+
+  const nome=document
+    .getElementById("nomeConsulta")
+    .value.trim()
+    .toLowerCase();
+
+  const container=document
+    .getElementById("meusFeedbacks");
+
+
+  if(!nome){
+    container.innerHTML="<p>Digite seu nome.</p>";
+    return;
+  }
+
+
+  const resultados=obterFeedbacks()
+    .filter(item=>
+      item.nome.toLowerCase()===nome
+    );
+
+
+  if(!resultados.length){
+    container.innerHTML=
+      "<p>Nenhum feedback encontrado.</p>";
+    return;
+  }
+
+
+  container.innerHTML=resultados
+    .map(item=>`
+
+      <div class="feedback">
+
+        <strong>${escapar(item.nome)}</strong>
+
+        <div class="feedback-stars">
+          ${"★".repeat(item.nota)}
+          ${"☆".repeat(5-item.nota)}
+        </div>
+
+        <div>${escapar(item.mensagem)}</div>
+
+        <small>
+          Linha: ${escapar(item.linha || "-")}<br>
+          ${escapar(item.data)}
+        </small>
+
+      </div>
+
+    `)
+    .join("");
+
+}
+
+
+/* ==============================
+   ADMINISTRADOR
+============================== */
+
+function loginAdmin(){
+
+  const senha=document
+    .getElementById("senhaAdmin")
+    .value;
+
+
+  if(senha!==CONFIG.senhaAdmin){
+
+    toast("❌ Senha incorreta.");
+
+    return;
+  }
+
+
+  const feedbacks=obterFeedbacks();
+
+  const painel=document
+    .getElementById("painelAdmin");
+
+
+  painel.innerHTML=`
+
+    <hr>
+
+    <p>
+      📊 Total de avaliações:
+      <b>${feedbacks.length}</b>
+    </p>
+
+    ${
+      feedbacks.length
+      ?
+      feedbacks
+      .slice()
+      .reverse()
+      .map(item=>`
+
+        <div class="feedback">
+
+          <strong>
+            ${escapar(item.nome)}
+          </strong>
+
+          <div class="feedback-stars">
+            ${"★".repeat(item.nota)}
+            ${"☆".repeat(5-item.nota)}
+          </div>
+
+          <div>
+            ${escapar(item.mensagem)}
+          </div>
+
+          <small>
+            Linha: ${escapar(item.linha || "-")}<br>
+            ${escapar(item.data)}
+          </small>
+
+          <br>
+
+          <button
+            class="delete"
+            onclick="apagarFeedback(${item.id})">
+            🗑️ Apagar
+          </button>
+
+        </div>
+
+      `)
+      .join("")
+      :
+      "<p>Nenhuma avaliação.</p>"
+    }
+
+  `;
+
+}
+
+
+function apagarFeedback(id){
+
+  if(!confirm("Deseja apagar este feedback?")){
+    return;
+  }
+
+  const novaLista=obterFeedbacks()
+    .filter(item=>item.id!==id);
+
+  salvarFeedbacks(novaLista);
+
+  loginAdmin();
+
+  toast("🗑️ Feedback apagado.");
+}
+
+
+/* ==============================
+   PIX
+============================== */
+
+async function copiarPix(){
+
+  const input=document
+    .getElementById("pixCode");
+
+  try{
+
+    await navigator.clipboard
+      .writeText(input.value);
+
+    toast("✅ Pix copiado!");
+
+  }
+  catch{
+
+    input.select();
+
+    document.execCommand("copy");
+
+    toast("✅ Pix copiado!");
+
+  }
+
+}
+
+
+/* ==============================
+   TEMA
+============================== */
+
+function alternarTema(){
+
+  document.body.classList.toggle("dark");
+
+  const dark=document.body
+    .classList.contains("dark");
+
+  localStorage.setItem(
+    CONFIG.tema,
+    dark?"dark":"light"
+  );
+
+  document.getElementById("themeButton")
+    .textContent=dark?"☀️":"🌙";
+
+}
+
+
+function carregarTema(){
+
+  if(
+    localStorage.getItem(CONFIG.tema)
+    ==="dark"
+  ){
+
+    document.body.classList.add("dark");
+
+    document.getElementById("themeButton")
+      .textContent="☀️";
+
+  }
+
+}
+
+
+/* ==============================
+   DALTONISMO
+============================== */
+
+function alternarDaltonico(){
+
+  document.body.classList.toggle("colorblind");
+
+  const ativo=document.body
+    .classList.contains("colorblind");
+
+  localStorage.setItem(
+    CONFIG.daltonico,
+    ativo?"on":"off"
+  );
+
+  toast(
+    ativo
+    ? "👓 Modo daltônico ativado."
+    : "👓 Modo daltônico desativado."
+  );
+
+}
+
+
+function carregarDaltonico(){
+
+  if(
+    localStorage.getItem(CONFIG.daltonico)
+    ==="on"
+  ){
+    document.body.classList.add("colorblind");
+  }
+
+}
+
+
+/* ==============================
+   TECLADO
+============================== */
+
+document.getElementById("linha")
+.addEventListener("keydown",event=>{
+
+  if(event.key==="Enter"){
+    buscarLinha();
+  }
+
+});
+
+document.addEventListener("keydown",event=>{
+
+  if(event.key==="Escape"){
+    fecharModais();
+  }
+
+});
+
+
+/* ==============================
+   INICIAR
+============================== */
+
+criarCards();
+carregarTema();
+carregarDaltonico();
+
+</script>
+
+</body>
+                               
+</html>
